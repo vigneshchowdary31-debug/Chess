@@ -148,7 +148,8 @@ final class GameViewModel: ObservableObject {
             // Castling: check rook hasn't moved and king hasn't moved; spaces empty; not in check; path not attacked.
             if !piece.hasMoved {
                 // King-side
-                if let rookPos = Position(file: 7, rank: from.rank), let rook = board.piece(at: rookPos), rook.type == .rook, !rook.hasMoved {
+                let rookPosK = Position(file: 7, rank: from.rank)
+                if let rook = board.piece(at: rookPosK), rook.type == .rook, !rook.hasMoved {
                     // squares between
                     let between = [Position(file: 5, rank: from.rank), Position(file: 6, rank: from.rank)]
                     if between.allSatisfy({ board.piece(at: $0) == nil }) {
@@ -165,7 +166,8 @@ final class GameViewModel: ObservableObject {
                     }
                 }
                 // Queen-side
-                if let rookPos = Position(file: 0, rank: from.rank), let rook = board.piece(at: rookPos), rook.type == .rook, !rook.hasMoved {
+                let rookPosQ = Position(file: 0, rank: from.rank)
+                if let rook = board.piece(at: rookPosQ), rook.type == .rook, !rook.hasMoved {
                     // squares between
                     let between = [Position(file: 3, rank: from.rank), Position(file: 2, rank: from.rank), Position(file: 1, rank: from.rank)]
                     if between.allSatisfy({ board.piece(at: $0) == nil }) {
@@ -239,7 +241,7 @@ final class GameViewModel: ObservableObject {
     // MARK: - Apply move
     func makeMove(_ move: Move) {
         // Determine if move is promotion/en-passant/castling by analyzing board
-        var mutableMove = move
+        _ = move
         // If pawn reaches last rank -> prompt promotion
         if let moving = board.piece(at: move.from), moving.type == .pawn {
             let lastRank = moving.color == .white ? 7 : 0

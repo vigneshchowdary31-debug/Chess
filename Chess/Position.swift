@@ -8,9 +8,12 @@
 import Foundation
 
 /// Board coordinate: file (0..7), rank (0..7)
-struct Position: Hashable, Codable {
+struct Position: Hashable, Codable, Identifiable {
     let file: Int // 0..7 (a..h)
     let rank: Int // 0..7 (1..8)
+    
+    // Use a stable identifier combining file and rank
+    var id: Int { rank * 8 + file }
     
     init(file: Int, rank: Int) {
         self.file = file
@@ -23,3 +26,4 @@ struct Position: Hashable, Codable {
         return Position(file: f, rank: r)
     }
 }
+

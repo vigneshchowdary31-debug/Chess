@@ -17,7 +17,7 @@ enum PieceType: String, Codable {
 }
 
 struct Piece: Identifiable, Codable, Equatable {
-    let id = UUID()
+    var id = UUID()
     var type: PieceType
     var color: PieceColor
     /// used to check castling and pawn first-move

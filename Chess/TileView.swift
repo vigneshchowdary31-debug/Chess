@@ -26,7 +26,7 @@ struct TileView: View {
                     .padding(4)
             } else if legalMove {
                 Circle()
-                    .fill(Color.green.opacity(0.7))
+                    .fill(Color.red.opacity(0.7))
                     .frame(width: 20, height: 20)
             }
             if let piece = piece {

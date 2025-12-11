@@ -239,11 +239,12 @@ final class GameViewModel: ObservableObject {
     }
     
     // MARK: - Apply move
-    func makeMove(_ move: Move) {
+    func makeMove(_ move: Move, silent: Bool = false) {
         // Determine if move is promotion/en-passant/castling by analyzing board
         _ = move
         // If pawn reaches last rank -> prompt promotion
-        if let moving = board.piece(at: move.from), moving.type == .pawn {
+        // But if move.promotion is already set (e.g. from undo replay or explicit choice), skip prompt
+        if move.promotion == nil, let moving = board.piece(at: move.from), moving.type == .pawn {
             let lastRank = moving.color == .white ? 7 : 0
             if move.to.rank == lastRank {
                 // show promotion UI before finalizing
@@ -264,9 +265,28 @@ final class GameViewModel: ObservableObject {
         selected = nil
         legalMoves = []
         // Sounds
-        AudioServicesPlaySystemSound(1104) // Tock
+        if !silent {
+            AudioServicesPlaySystemSound(1104) // Tock
+        }
         // check game end states
         updateGameEndConditions()
+    }
+    
+    func undo() {
+        guard !history.isEmpty else { return }
+        let movesToReplay = history.dropLast()
+        
+        // Reset board to initial state
+        reset()
+        
+        // Replay all previous moves silently
+        // We need to restore 'history' manually after reset because reset clears it,
+        // but makeMove appends to it. So strictly speaking we can just call makeMove for each.
+        // reset() clears history, so we are good.
+        
+        for move in movesToReplay {
+            makeMove(move, silent: true)
+        }
     }
     
     /// Called to finalize promotion selection (choose queen/rook/bishop/knight)

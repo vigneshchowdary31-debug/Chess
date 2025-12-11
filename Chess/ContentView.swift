@@ -70,7 +70,7 @@ struct ContentView: View {
     
     var controls: some View {
         HStack {
-            Button { /* undo future */ } label: {
+            Button { vm.undo() } label: {
                 Label("Undo", systemImage: "arrow.uturn.backward")
             }.disabled(vm.history.isEmpty)
             Spacer()

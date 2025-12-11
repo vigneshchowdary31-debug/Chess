@@ -12,29 +12,60 @@ struct ContentView: View {
     @Namespace var pieceNamespace
     
     var body: some View {
-        VStack {
-            header
-            board
-            controls
+
+        ZStack {
+            Theme.background
+                .ignoresSafeArea()
+            
+            VStack {
+                header
+                    .background(Theme.panelBackground)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                
+                board
+                
+                controls
+                    .background(Theme.panelBackground)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+            }
+            .padding(.vertical)
         }
-        .padding()
+        .preferredColorScheme(.dark)
         .sheet(item: $vm.showPromotionFor, content: { pos in
             PromotionPicker { chosen in
                 vm.finalizePromotion(to: chosen)
             }
         })
+        .overlay(
+            Group {
+                if vm.checkmated || vm.stalemated {
+                    GameOverView(
+                        checkmated: vm.checkmated,
+                        stalemated: vm.stalemated,
+                        winnerColor: vm.checkmated ? vm.currentTurn.opponent : nil,
+                        onReset: { vm.reset() }
+                    )
+                }
+            }
+        )
     }
     
     var header: some View {
         HStack {
+
             Text(vm.checkmated ? "\(vm.currentTurn.rawValue.capitalized) is checkmated" :
                     vm.stalemated ? "Stalemate" :
+                    vm.inCheck ? "Check!" :
                     vm.currentTurn == .white ? "White to move" : "Black to move")
-                .font(.title2)
+                .font(.title3)
                 .bold()
+                .foregroundColor(vm.inCheck && !vm.checkmated ? .red : .white)
             Spacer()
             Button(action: { vm.reset() }) {
                 Label("New Game", systemImage: "arrow.counterclockwise")
+                    .foregroundColor(.white)
             }
         }
         .padding(.horizontal)
@@ -61,8 +92,8 @@ struct ContentView: View {
                     }
                 }
             }
-            .cornerRadius(8)
-            .shadow(radius: 6)
+            .cornerRadius(4)
+            .shadow(radius: 10)
         }
         .aspectRatio(1, contentMode: .fit)
         .padding()
@@ -72,11 +103,13 @@ struct ContentView: View {
         HStack {
             Button { vm.undo() } label: {
                 Label("Undo", systemImage: "arrow.uturn.backward")
+                    .foregroundColor(.white)
             }.disabled(vm.history.isEmpty)
             Spacer()
             Text("Last move: \(vm.lastMove != nil ? "\(vm.lastMove!.from.file),\(vm.lastMove!.from.rank) → \(vm.lastMove!.to.file),\(vm.lastMove!.to.rank)" : "—")")
                 .font(.caption)
+                .foregroundColor(.white.opacity(0.8))
         }
-        .padding(.horizontal)
+        .padding()
     }
 }

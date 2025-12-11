@@ -11,6 +11,7 @@ final class GameViewModel: ObservableObject {
     @Published var stalemated: Bool = false
     @Published var showPromotionFor: Position? = nil
     @Published var lastMove: Move? = nil
+    @Published var inCheck: Bool = false
     
     /// Move history (for undo or en-passant detection)
     private(set) var history: [Move] = []
@@ -29,6 +30,7 @@ final class GameViewModel: ObservableObject {
         showPromotionFor = nil
         lastMove = nil
         history = []
+        inCheck = false
     }
     
     // MARK: - Selection & move generation
@@ -378,12 +380,17 @@ final class GameViewModel: ObservableObject {
             let moves = generateLegalMoves(from: pos)
             if !moves.isEmpty { hasAnyLegal = true; break }
         }
+
+        
+        // Update check status regardless of game end
+        inCheck = isKingInCheck(color: currentTurn, board: board)
+        
         if hasAnyLegal {
             checkmated = false
             stalemated = false
             return
         } else {
-            if isKingInCheck(color: currentTurn, board: board) {
+            if inCheck {
                 checkmated = true
                 stalemated = false
             } else {

@@ -19,15 +19,15 @@ struct TileView: View {
             Rectangle()
                 .fill(backgroundColor)
             // highlight selected or legal
+            // highlight selected or legal
             if isSelected {
                 RoundedRectangle(cornerRadius: 4)
-                    .stroke(lineWidth: 3)
-                    .foregroundColor(.yellow)
-                    .padding(4)
+                    .stroke(Theme.selection, lineWidth: 4)
+                    .padding(2)
             } else if legalMove {
                 Circle()
-                    .fill(Color.red.opacity(0.7))
-                    .frame(width: 20, height: 20)
+                    .fill(Theme.legalMove)
+                    .frame(width: 24, height: 24)
             }
             if let piece = piece {
                 PieceView(piece: piece)
@@ -40,6 +40,6 @@ struct TileView: View {
     
     var backgroundColor: Color {
         let isLight = (position.file + position.rank) % 2 == 0
-        return isLight ? Color(.systemGray6) : Color(.systemGreen).opacity(0.9)
+        return isLight ? Theme.lightSquare : Theme.darkSquare
     }
 }

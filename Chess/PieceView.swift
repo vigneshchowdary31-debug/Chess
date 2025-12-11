@@ -9,27 +9,39 @@ import SwiftUI
 
 struct PieceView: View {
     let piece: Piece
+    @AppStorage("pieceSet") var pieceSet = PieceSet.standard
+    @AppStorage("boardTheme") var boardTheme = BoardTheme.classic
     
     var body: some View {
-        Text(symbol)
-            .font(.system(size: 36))
-            .foregroundColor(pieceColor)
-            .shadow(color: .black.opacity(0.5), radius: 1, x: 0, y: 1)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        Group {
+            if pieceSet == .standard {
+                Text(symbol)
+                    .font(.system(size: 100)) // Use large font, let it scale down
+                    .minimumScaleFactor(0.1)
+                    .foregroundColor(pieceColor)
+                    .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 1)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                PieceShape(type: piece.type, set: pieceSet)
+                    .fill(pieceColor)
+                    .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 1)
+                    .aspectRatio(1, contentMode: .fit)
+            }
+        }
     }
     
     var symbol: String {
         switch piece.type {
-        case .king: return "♚"
-        case .queen: return "♛"
-        case .rook: return "♜"
-        case .bishop: return "♝"
-        case .knight: return "♞"
-        case .pawn: return "♟︎"
+        case .pawn: return "♟\u{FE0E}"
+        case .rook: return "♜\u{FE0E}"
+        case .knight: return "♞\u{FE0E}"
+        case .bishop: return "♝\u{FE0E}"
+        case .queen: return "♛\u{FE0E}"
+        case .king: return "♚\u{FE0E}"
         }
     }
     
     var pieceColor: Color {
-        piece.color == .white ? Theme.whitePiece : Theme.blackPiece
+        return piece.color == .white ? Theme.whitePiece : Theme.blackPiece
     }
 }

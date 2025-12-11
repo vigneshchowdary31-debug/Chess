@@ -25,5 +25,11 @@ struct Position: Hashable, Codable, Identifiable {
         guard (0...7).contains(f) && (0...7).contains(r) else { return nil }
         return Position(file: f, rank: r)
     }
+    
+    var fileString: String {
+        let files = ["a", "b", "c", "d", "e", "f", "g", "h"]
+        guard file >= 0 && file < 8 else { return "?" }
+        return files[file]
+    }
 }
 

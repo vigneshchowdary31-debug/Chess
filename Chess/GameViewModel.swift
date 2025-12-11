@@ -1,6 +1,8 @@
 import Foundation
 import Combine
 import AudioToolbox
+import SwiftUI
+import UIKit
 
 final class GameViewModel: ObservableObject {
     @Published private(set) var board: ChessBoard = ChessBoard()
@@ -16,6 +18,8 @@ final class GameViewModel: ObservableObject {
     /// Move history (for undo or en-passant detection)
     private(set) var history: [Move] = []
     
+    @Published var capturedPieces: [Piece] = []
+    
     init() {
         reset()
     }
@@ -30,7 +34,10 @@ final class GameViewModel: ObservableObject {
         showPromotionFor = nil
         lastMove = nil
         history = []
+        lastMove = nil
+        history = []
         inCheck = false
+        capturedPieces = []
     }
     
     // MARK: - Selection & move generation
@@ -258,8 +265,20 @@ final class GameViewModel: ObservableObject {
             }
         }
         var boardCopy = board
-        applyMoveOnBoard(&boardCopy, move: move, forReal: true)
-        board = boardCopy
+        if let captured = applyMoveOnBoard(&boardCopy, move: move, forReal: true) {
+            capturedPieces.append(captured)
+        }
+        
+        if silent {
+            board = boardCopy
+        } else {
+            // Use withAnimation to drive matchedGeometryEffect
+            // Slower, smoother spring for better visual tracking
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0)) {
+                board = boardCopy
+            }
+        }
+        
         // toggle turn and update history
         currentTurn = currentTurn.opponent
         history.append(move)
@@ -268,7 +287,10 @@ final class GameViewModel: ObservableObject {
         legalMoves = []
         // Sounds
         if !silent {
-            AudioServicesPlaySystemSound(1104) // Tock
+            if UserDefaults.standard.bool(forKey: "enableSound") {
+                AudioServicesPlaySystemSound(1104) // Tock
+            }
+            triggerHaptic()
         }
         // check game end states
         updateGameEndConditions()
@@ -297,21 +319,34 @@ final class GameViewModel: ObservableObject {
         var move = pending
         move.promotion = type
         var boardCopy = board
-        applyMoveOnBoard(&boardCopy, move: move, forReal: true)
-        board = boardCopy
+        if let captured = applyMoveOnBoard(&boardCopy, move: move, forReal: true) {
+            capturedPieces.append(captured)
+        }
+        
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0)) {
+            board = boardCopy
+        }
+        
         currentTurn = currentTurn.opponent
         history.append(move)
         lastMove = move
         showPromotionFor = nil
         selected = nil
         legalMoves = []
-        AudioServicesPlaySystemSound(1104)
+        if UserDefaults.standard.bool(forKey: "enableSound") {
+            AudioServicesPlaySystemSound(1104)
+        }
+        triggerHaptic()
         updateGameEndConditions()
     }
     
     /// Applies move onto given board. if forReal==true, update hasMoved flags, handle en-passant removal, castling rook move, promotion.
-    func applyMoveOnBoard(_ b: inout ChessBoard, move: Move, forReal: Bool) {
-        guard var piece = b.piece(at: move.from) else { return }
+    /// Returns captured piece if any (only accurate if forReal=true or we don't care about flags, but capture logic depends on board state)
+    @discardableResult
+    func applyMoveOnBoard(_ b: inout ChessBoard, move: Move, forReal: Bool) -> Piece? {
+        guard var piece = b.piece(at: move.from) else { return nil }
+        var captured: Piece? = nil
+        
         // detect en-passant
         var actualMove = move
         if piece.type == .pawn {
@@ -324,11 +359,16 @@ final class GameViewModel: ObservableObject {
         if piece.type == .king && abs(move.to.file - move.from.file) == 2 {
             actualMove.isCastling = true
         }
-        // If en-passant, remove captured pawn from behind target
+        
+        // Handle capture
         if actualMove.isEnPassant {
             let capturedPawnPos = Position(file: actualMove.to.file, rank: actualMove.from.rank)
+            captured = b.piece(at: capturedPawnPos)
             b.setPiece(nil, at: capturedPawnPos)
+        } else {
+            captured = b.piece(at: actualMove.to)
         }
+        
         // Move piece
         b.setPiece(nil, at: actualMove.from)
         // handle promotion - if move.promotion exists or we have promotion implied
@@ -370,6 +410,8 @@ final class GameViewModel: ObservableObject {
                 }
             }
         }
+        
+        return captured
     }
     
     // MARK: - Endgame checks
@@ -397,6 +439,13 @@ final class GameViewModel: ObservableObject {
                 checkmated = false
                 stalemated = true
             }
+        }
+    }
+
+    func triggerHaptic() {
+        if UserDefaults.standard.bool(forKey: "enableHaptics") {
+            let impactMed = UIImpactFeedbackGenerator(style: .medium)
+            impactMed.impactOccurred()
         }
     }
 }

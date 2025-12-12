@@ -3,7 +3,6 @@
 //  Chess
 //
 //  Created by Vignesh Chowdary on 24/11/25.
-//
 
 import SwiftUI
 

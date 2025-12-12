@@ -18,10 +18,11 @@ struct MainMenuView: View {
     @State private var isJoining = false
     @State private var showCodeAlert = false
     @State private var createdCode = ""
+    @State private var activeGameCode = "" // Explicitly store the active code
     @State private var errorMessage = ""
     @State private var showError = false
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Theme.background.ignoresSafeArea()
                 
@@ -81,6 +82,7 @@ struct MainMenuView: View {
                                 fbManager.joinGame(code: joinCode) { result in
                                     switch result {
                                     case .success:
+                                        activeGameCode = joinCode // Set active code
                                         navigateToOnline = true
                                         isCreating = false
                                         isJoining = false
@@ -127,7 +129,7 @@ struct MainMenuView: View {
                 }
                 
                 // Invisible link for Online Game
-                NavigationLink(destination: ContentView(mode: .online(code: fbManager.currentGame?.id ?? "")), isActive: $navigateToOnline) {
+                NavigationLink(destination: ContentView(mode: .online(code: activeGameCode)), isActive: $navigateToOnline) {
                     EmptyView()
                 }
             }
@@ -135,6 +137,7 @@ struct MainMenuView: View {
         .preferredColorScheme(.dark) // Default to dark for menu? Or respect system.
         .alert("Game Created", isPresented: $showCodeAlert) {
             Button("Enter Game") {
+                activeGameCode = createdCode // Set active code
                 navigateToOnline = true
                 isCreating = false
             }

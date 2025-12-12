@@ -64,6 +64,7 @@ final class GameViewModel: ObservableObject {
     }
     
     func syncGameState(game: OnlineGame) {
+        print("🔄 syncGameState called. Remote moves: \(game.moves.count), Local history: \(history.count)")
         // Determine my color
         if game.whitePlayerId == FirebaseManager.shared.myId {
             localPlayerColor = .white
@@ -76,6 +77,7 @@ final class GameViewModel: ObservableObject {
         
         // Apply moves I don't have
         if game.moves.count > self.history.count {
+            print("🔄 applying \(game.moves.count - self.history.count) new moves")
             for i in self.history.count..<game.moves.count {
                 let move = game.moves[i]
                 // Apply this move
@@ -299,6 +301,7 @@ final class GameViewModel: ObservableObject {
     
     // MARK: - Apply move
     func makeMove(_ move: Move, silent: Bool = false, fromNetwork: Bool = false) {
+        print("♟️ makeMove called. fromNetwork: \(fromNetwork)")
         // Determine if move is promotion/en-passant/castling by analyzing board
         _ = move
         // If pawn reaches last rank -> prompt promotion

@@ -29,18 +29,24 @@ struct ContentView: View {
         self.mode = mode
     }
     
+    var shouldFlipBoard: Bool {
+        if vm.onlineMode {
+            return vm.localPlayerColor == .black
+        } else {
+            return autoFlipBoard && vm.currentTurn == .black
+        }
+    }
+    
     var body: some View {
-        let isFlipped = (mode == .passAndPlay && autoFlipBoard && vm.currentTurn == .black) || 
-                        (vm.onlineMode && vm.localPlayerColor == .black)
-        
         ZStack {
             Theme.background
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // Top Player (Opponent)
-                playerInfo(color: isFlipped ? .white : .black)
-                    .rotationEffect(Angle(degrees: autoFlipBoard ? 0 : 180))
+                // Top Player (Opponent)
+                playerInfo(color: shouldFlipBoard ? .white : .black)
+                    .rotationEffect(Angle(degrees: (autoFlipBoard && !vm.onlineMode) ? 180 : 0))
                 
                 Spacer()
                 
@@ -50,7 +56,7 @@ struct ContentView: View {
                 Spacer()
                 
                 // Bottom Player (Active/You)
-                playerInfo(color: isFlipped ? .black : .white)
+                playerInfo(color: shouldFlipBoard ? .black : .white)
             }
             .padding(.vertical)
             .padding(.bottom, 120) // Increase space for floating controls
@@ -58,6 +64,18 @@ struct ContentView: View {
         .onAppear {
             if case .online(let code) = mode {
                 vm.startOnlineGame(code: code)
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if case .online(let code) = mode {
+                Text("Room: \(code)")
+                    .font(.system(.caption, design: .monospaced))
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.ultraThinMaterial)
+                    .clipShape(Capsule())
+                    .padding()
             }
         }
         .preferredColorScheme(isDarkMode ? .dark : .light)
@@ -82,6 +100,22 @@ struct ContentView: View {
                         winnerColor: vm.checkmated ? vm.currentTurn.opponent : nil,
                         onReset: { vm.reset() }
                     )
+                } else if vm.inCheck {
+                    VStack {
+                        Text("CHECK!")
+                            .font(.system(.title, design: .rounded))
+                            .fontWeight(.black)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(Color.red.opacity(0.9))
+                            .clipShape(Capsule())
+                            .shadow(radius: 10)
+                            .transition(.scale.combined(with: .opacity))
+                        Spacer()
+                    }
+                    .padding(.top, 100) // Adjust position
+                    .zIndex(100)
                 }
             }
         )
@@ -97,13 +131,12 @@ struct ContentView: View {
                     HStack(spacing:0) {
                         ForEach(0..<8, id: \.self) { file in
                             let pos = Position(file: file, rank: rank)
-                            let isFlipped = autoFlipBoard && vm.currentTurn == .black
                             TileView(position: pos,
                                      piece: vm.board.piece(at: pos),
                                      isSelected: vm.selected == pos,
                                      legalMove: vm.legalMoves.contains(pos),
                                      isLastMoveTarget: vm.lastMove?.to == pos || vm.lastMove?.from == pos,
-                                     isFlipped: isFlipped,
+                                     isFlipped: shouldFlipBoard,
                                      pieceNamespace: pieceNamespace)
                             .frame(width: size/8, height: size/8)
                             .onTapGesture {
@@ -119,7 +152,7 @@ struct ContentView: View {
         .aspectRatio(1, contentMode: .fit)
             .cornerRadius(4)
             .shadow(radius: 10)
-            .rotationEffect(Angle(degrees: autoFlipBoard && vm.currentTurn == .black ? 180 : 0))
+            .rotationEffect(Angle(degrees: shouldFlipBoard ? 180 : 0))
             .animation(.easeInOut(duration: 1.0), value: vm.currentTurn)
     }
     

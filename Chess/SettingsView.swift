@@ -22,7 +22,7 @@ struct SettingsView: View {
     @AppStorage("isDarkMode") var isDarkMode = true
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Theme.background
                     .ignoresSafeArea()

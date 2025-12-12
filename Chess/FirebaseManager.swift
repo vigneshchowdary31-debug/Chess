@@ -130,6 +130,7 @@ class FirebaseManager: ObservableObject {
     // Listen to updates
     func listenToGame(code: String) {
         listenerRegistration?.remove()
+        guard !code.isEmpty else { return } // Fix crash if code is empty
         guard let db = db else { return }
         
         listenerRegistration = db.collection("games").document(code)
@@ -137,6 +138,7 @@ class FirebaseManager: ObservableObject {
                 guard let snapshot = snapshot else { return }
                 // Update on MainActor
                 Task { @MainActor in
+                    print("🔥 Listener received game update. Moves: \(snapshot.data()?["moves"] ?? "nil")")
                     try? self.currentGame = snapshot.data(as: OnlineGame.self)
                 }
             }
@@ -144,6 +146,7 @@ class FirebaseManager: ObservableObject {
     
     // Send a move
     func sendMove(gameId: String, move: Move) {
+        print("🔥 sendMove called. GameId: \(gameId), Move: \(move)")
         guard var game = currentGame else { return }
         guard let db = db else { return }
         

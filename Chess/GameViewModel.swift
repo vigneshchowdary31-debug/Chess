@@ -15,6 +15,11 @@ final class GameViewModel: ObservableObject {
     @Published var lastMove: Move? = nil
     @Published var inCheck: Bool = false
     
+    // Online
+    @Published var onlineMode = false
+    @Published var localPlayerColor: PieceColor? = nil // if nil, allow both (hotseat)
+    private var cancellables = Set<AnyCancellable>()
+    
     /// Move history (for undo or en-passant detection)
     private(set) var history: [Move] = []
     
@@ -24,6 +29,7 @@ final class GameViewModel: ObservableObject {
         reset()
     }
     
+
     func reset() {
         board = ChessBoard()
         selected = nil
@@ -38,6 +44,44 @@ final class GameViewModel: ObservableObject {
         history = []
         inCheck = false
         capturedPieces = []
+        // Don't reset online mode params unless explicit?
+        // Actually reset() is called by "Reset" button. In online, reset is voted?
+        // For now, if online, maybe just reset board state but keep connection?
+        // Or if reset() is called, maybe it just resets local state?
+        // Let's assume reset() is for local only or restarts game.
+    }
+    
+    func startOnlineGame(code: String) {
+        onlineMode = true
+        FirebaseManager.shared.listenToGame(code: code)
+        
+        FirebaseManager.shared.$currentGame
+            .sink { [weak self] game in
+                guard let self = self, let game = game else { return }
+                self.syncGameState(game: game)
+            }
+            .store(in: &cancellables)
+    }
+    
+    func syncGameState(game: OnlineGame) {
+        // Determine my color
+        if game.whitePlayerId == FirebaseManager.shared.myId {
+            localPlayerColor = .white
+        } else if game.blackPlayerId == FirebaseManager.shared.myId {
+            localPlayerColor = .black
+        } else {
+            // Observer?
+            localPlayerColor = nil
+        }
+        
+        // Apply moves I don't have
+        if game.moves.count > self.history.count {
+            for i in self.history.count..<game.moves.count {
+                let move = game.moves[i]
+                // Apply this move
+                self.makeMove(move, silent: false, fromNetwork: true)
+            }
+        }
     }
     
     // MARK: - Selection & move generation
@@ -51,6 +95,12 @@ final class GameViewModel: ObservableObject {
         legalMoves = []
         guard let piece = board.piece(at: pos) else { return }
         guard piece.color == currentTurn else { return }
+        
+        // Online check
+        if let local = localPlayerColor, onlineMode {
+            guard piece.color == local else { return }
+        }
+        
         selected = pos
         legalMoves = generateLegalMoves(from: pos)
     }
@@ -248,7 +298,7 @@ final class GameViewModel: ObservableObject {
     }
     
     // MARK: - Apply move
-    func makeMove(_ move: Move, silent: Bool = false) {
+    func makeMove(_ move: Move, silent: Bool = false, fromNetwork: Bool = false) {
         // Determine if move is promotion/en-passant/castling by analyzing board
         _ = move
         // If pawn reaches last rank -> prompt promotion
@@ -294,6 +344,12 @@ final class GameViewModel: ObservableObject {
         }
         // check game end states
         updateGameEndConditions()
+        
+        if onlineMode && !fromNetwork {
+            if let gameId = FirebaseManager.shared.currentGame?.id {
+                FirebaseManager.shared.sendMove(gameId: gameId, move: move)
+            }
+        }
     }
     
     func undo() {
@@ -338,6 +394,12 @@ final class GameViewModel: ObservableObject {
         }
         triggerHaptic()
         updateGameEndConditions()
+        
+        if onlineMode {
+            if let gameId = FirebaseManager.shared.currentGame?.id {
+                FirebaseManager.shared.sendMove(gameId: gameId, move: move)
+            }
+        }
     }
     
     /// Applies move onto given board. if forReal==true, update hasMoved flags, handle en-passant removal, castling rook move, promotion.

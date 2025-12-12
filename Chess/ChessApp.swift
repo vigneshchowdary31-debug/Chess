@@ -7,11 +7,21 @@
 
 import SwiftUI
 
+import FirebaseCore
+
 @main
 struct ChessApp: App {
+    init() {
+        if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
+            FirebaseApp.configure()
+        } else {
+            print("⚠️ WARNING: GoogleService-Info.plist NOT FOUND. Online features will crash or fail.")
+        }
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainMenuView()
         }
     }
 }

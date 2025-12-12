@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		04A7B8782EEADBCF0024F13D /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 04A7B8772EEADBCF0024F13D /* FirebaseCore */; };
+		04A7B87A2EEADBCF0024F13D /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 04A7B8792EEADBCF0024F13D /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		045601092ED4B9E50062B9AC /* Chess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Chess.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				04A7B8782EEADBCF0024F13D /* FirebaseCore in Frameworks */,
+				04A7B87A2EEADBCF0024F13D /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +72,8 @@
 			);
 			name = Chess;
 			packageProductDependencies = (
+				04A7B8772EEADBCF0024F13D /* FirebaseCore */,
+				04A7B8792EEADBCF0024F13D /* FirebaseFirestore */,
 			);
 			productName = Chess;
 			productReference = 045601092ED4B9E50062B9AC /* Chess.app */;
@@ -94,6 +103,9 @@
 			);
 			mainGroup = 045601002ED4B9E50062B9AC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				04A7B8762EEADBCF0024F13D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0456010A2ED4B9E50062B9AC /* Products */;
 			projectDirPath = "";
@@ -332,6 +344,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		04A7B8762EEADBCF0024F13D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		04A7B8772EEADBCF0024F13D /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04A7B8762EEADBCF0024F13D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		04A7B8792EEADBCF0024F13D /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04A7B8762EEADBCF0024F13D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 045601012ED4B9E50062B9AC /* Project object */;
 }

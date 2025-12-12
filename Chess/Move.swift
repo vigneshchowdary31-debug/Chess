@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Move: Equatable {
+struct Move: Equatable, Codable {
     let from: Position
     let to: Position
     /// promotion piece type (if pawn promotion)

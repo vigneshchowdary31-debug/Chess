@@ -7,16 +7,31 @@
 
 import SwiftUI
 
+enum GameMode: Equatable {
+    case passAndPlay
+    case online(code: String)
+}
+
 struct ContentView: View {
     @StateObject var vm = GameViewModel()
+    @Environment(\.presentationMode) var presentationMode
+    
+    // Mode passed from Menu
+    var mode: GameMode = .passAndPlay
+    
     @Namespace var pieceNamespace
     @State private var showSettings = false
     @AppStorage("autoFlipBoard") var autoFlipBoard = false
     @AppStorage("boardTheme") var boardTheme = BoardTheme.classic
     @AppStorage("isDarkMode") var isDarkMode = true
     
+    init(mode: GameMode = .passAndPlay) {
+        self.mode = mode
+    }
+    
     var body: some View {
-        let isFlipped = autoFlipBoard && vm.currentTurn == .black
+        let isFlipped = (mode == .passAndPlay && autoFlipBoard && vm.currentTurn == .black) || 
+                        (vm.onlineMode && vm.localPlayerColor == .black)
         
         ZStack {
             Theme.background
@@ -39,6 +54,11 @@ struct ContentView: View {
             }
             .padding(.vertical)
             .padding(.bottom, 120) // Increase space for floating controls
+        }
+        .onAppear {
+            if case .online(let code) = mode {
+                vm.startOnlineGame(code: code)
+            }
         }
         .preferredColorScheme(isDarkMode ? .dark : .light)
         .overlay(alignment: .bottom) {
@@ -154,7 +174,7 @@ struct ContentView: View {
                     Text("Undo").font(.caption2)
                 }
                 .foregroundColor(.primary)
-            }.disabled(vm.history.isEmpty)
+            }.disabled(vm.history.isEmpty || vm.onlineMode)
             
             Button { vm.reset() } label: {
                  VStack(spacing: 4) {
@@ -163,7 +183,7 @@ struct ContentView: View {
                     Text("Reset").font(.caption2)
                 }
                 .foregroundColor(.primary)
-            }
+            }.disabled(vm.onlineMode)
             
             Button { showSettings = true } label: {
                  VStack(spacing: 4) {
